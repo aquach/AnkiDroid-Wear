@@ -275,11 +275,9 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             if (settings == null || settings.isDayMode()) {
                 viewHolder.catName.setTextColor(getResources().getColor(R.color.dayTextColor));
                 viewHolder.catNumber.setTextColor(getResources().getColor(R.color.dayTextColor));
-                viewHolder.catLayout.setBackgroundResource(R.drawable.round_rect_day);
             } else {
                 viewHolder.catName.setTextColor(getResources().getColor(R.color.nightTextColor));
                 viewHolder.catNumber.setTextColor(getResources().getColor(R.color.nightTextColor));
-                viewHolder.catLayout.setBackgroundResource(R.drawable.round_rect_night);
             }
 
             return view;
