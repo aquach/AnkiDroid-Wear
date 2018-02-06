@@ -9,7 +9,7 @@
     <string name="selected_deck" translatable="false">selected_deck</string>
     <string name="wear_main__please_wait" translatable="false">:)</string>
 
-    <string name="review_frag__no_more_cards">No more Cards</string>
+    <string name="review_frag__no_more_cards">No more cards</string>
 
     <string name="common__good">Good</string>
     <string name="common_hard">Hard</string>

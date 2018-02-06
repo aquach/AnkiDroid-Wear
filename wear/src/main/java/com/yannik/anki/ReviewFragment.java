@@ -15,6 +15,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.view.GridViewPager;
@@ -50,6 +51,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static android.content.Context.VIBRATOR_SERVICE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -458,6 +461,10 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                                 break;
                         }
 
+
+                        Vibrator vibrator = (Vibrator) mContext.getSystemService(VIBRATOR_SERVICE);
+                        long[] vibrationPattern = {0, 100};
+                        vibrator.vibrate(vibrationPattern, -1);
 
                         answerCard(ease);
                     }
