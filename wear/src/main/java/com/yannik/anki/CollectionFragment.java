@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +24,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -152,9 +156,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
     @Override
     public void onJsonReceive(String path, JSONObject js) {
-
         if (path.equals(CommonIdentifiers.P2W_COLLECTION_LIST)) {
-
             JSONArray collectionNames = js.names();
             if (collectionNames == null) return;
 
@@ -174,8 +176,15 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
             }
+
+            Collections.sort(mDecks, new Comparator<Deck>() {
+                @Override
+                public int compare(Deck d1, Deck d2) {
+                    return new ListComparator<String>().compare(Arrays.asList(d1.getNameTokens()), Arrays.asList(d2.getNameTokens()));
+                }
+            });
+
             if (mListView == null) {
                 return;
             }
@@ -269,7 +278,13 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
             // setting here values to the fields of my items from my fan object
             Deck oneDeck = mDNAADecks.get(position);
-            viewHolder.catName.setText(oneDeck.getName());
+
+            StringBuilder deckName = new StringBuilder();
+            for (int i = 0; i < oneDeck.getNameTokens().length - 1; i++) {
+                deckName.append("  ↳ ");
+            }
+            deckName.append(oneDeck.getSubdeckName());
+            viewHolder.catName.setText(deckName.toString());
             // Using fromHtml to allow easy one character coloration
             viewHolder.catNumber.setText(Html.fromHtml(sumCountsForDeck(oneDeck)));
 
@@ -290,7 +305,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             int numLearningCards = 0;
             int numReviewingCards = 0;
             for (Deck deck : mDNAADecks) {
-                if (deck.getName().equals(targetDeck.getName()) || deck.getName().contains(targetDeck.getName() + "::")) {
+                if (deck.getName().equals(targetDeck.getName()) || deck.isSubdeckOf(targetDeck)) {
                     numNewCards += deck.getNewCount();
                     numLearningCards += deck.getLearningCount();
                     numReviewingCards += deck.getReviewCount();
@@ -336,7 +351,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         /**
          * The deck name. e.g. : "computing::java".
          */
-        private String mName;
+        private String[] mName;
         /**
          * The unique identifier of this deck. e.g. : "1472977314172".
          */
@@ -370,8 +385,16 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         /**
          * @return The deck name. e.g. : "computing::java".
          */
-        public String getName() {
+        String getName() {
+            return TextUtils.join("::", mName);
+        }
+
+        String[] getNameTokens() {
             return mName;
+        }
+
+        String getSubdeckName() {
+            return mName[mName.length - 1];
         }
 
         /**
@@ -395,6 +418,10 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             return mReviewCount;
         }
 
+        boolean isSubdeckOf(Deck d) {
+            return getName().contains(d.getName() + "::");
+        }
+
         /**
          * Parse deck counts string.
          *
@@ -416,7 +443,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         }
 
         private void setName(String parName) {
-            mName = parName;
+            mName = parName.split("::");
         }
 
         /**
@@ -429,7 +456,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         @Override
         public String toString() {
             final StringBuffer sb = new StringBuffer("Deck{");
-            sb.append("mName='").append(mName).append('\'');
+            sb.append("mName='").append(getName()).append('\'');
             sb.append(", mID=").append(mID);
             sb.append(", mNewCount=").append(mNewCount);
             sb.append(", mLearningCount=").append(mLearningCount);
