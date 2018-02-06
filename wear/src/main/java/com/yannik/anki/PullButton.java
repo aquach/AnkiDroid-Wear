@@ -66,7 +66,6 @@ public class PullButton extends RelativeLayout {
         easeTextView = (TextView) findViewById(R.id.ease_text);
 
 
-
         for (int i = 0; i < N; ++i) {
             int attr = a.getIndex(i);
             switch (attr) {
@@ -87,7 +86,6 @@ public class PullButton extends RelativeLayout {
             }
         }
         a.recycle();
-
 
 
         ViewTreeObserver vto = getViewTreeObserver();
@@ -129,8 +127,7 @@ public class PullButton extends RelativeLayout {
         }
 
 
-
-        minMovementDistance = displaySize.y / 2;
+        minMovementDistance = displaySize.y * 3 / 4;
 
 
         setAlpha(homeAlpha);
@@ -162,42 +159,30 @@ public class PullButton extends RelativeLayout {
         this.ocl = ocl;
     }
 
-    public void setImageRessource(int res) {
-        imageResId = res;
-        if (icon != null) {
-            icon.setImageResource(res);
-        }
-    }
-
     public void setText(String text) {
         textView.setText(text);
     }
 
     public void slideIn(long delay) {
-        if (upsideDown) {
-            setY(-getHeight());
-        } else {
-            setY(displaySize.y);
-        }
+        setY(homePosition);
         setAlpha(homeAlpha);
         setVisibility(View.VISIBLE);
-        animate().setStartDelay(delay).y(homePosition).setListener(null);
     }
 
     public void animateOut(float velocity) {
-
-        animate()
-                .setStartDelay(0)
-                .y(exitY)
-                .setDuration(Math.min((long) ((Math.abs(getY() - exitY)) / Math.abs(velocity)), 500))
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        if (ocl != null) ocl.onClick(PullButton.this);
-                        setY(displaySize.y + 10);
-                        animate().setStartDelay(0).y(homePosition).setListener(null).setDuration(250);
-                    }
-                });
+        if (ocl != null) ocl.onClick(PullButton.this);
+//        animate()
+//                .setStartDelay(0)
+//                .y(exitY)
+//                .setDuration(Math.min((long) ((Math.abs(getY() - exitY)) / Math.abs(velocity)), 500))
+//                .setListener(new AnimatorListenerAdapter() {
+//                    @Override
+//                    public void onAnimationEnd(Animator animation) {
+//                        if (ocl != null) ocl.onClick(PullButton.this);
+//                        setY(displaySize.y + 10);
+//                        animate().setStartDelay(0).y(homePosition).setListener(null).setDuration(250);
+//                    }
+//                });
     }
 
     class SwipeTouchListener implements OnTouchListener {
@@ -243,9 +228,6 @@ public class PullButton extends RelativeLayout {
                     float yVelocity = mVelocityTracker.getYVelocity();
 
                     if (viewPositionY < minMovementDistance && yVelocity >= 0) {
-
-                        System.out.println("Velocity is: " + yVelocity);
-                        System.out.println("Distance is: " + (viewPositionY - exitY));
                         animateOut(mVelocityTracker.getYVelocity());
                     } else if (viewPositionY + v.getHeight() < displaySize.y) {
                         v.animate().setStartDelay(0).y(extendedPosition).alpha(extendedAlpha).setListener(null);
