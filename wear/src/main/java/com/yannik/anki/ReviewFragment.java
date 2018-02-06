@@ -335,7 +335,7 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         setDayMode(settings.isDayMode());
     }
 
-    private void setDayMode(boolean dayMode){
+    private void setDayMode(boolean dayMode) {
         if (dayMode) {
             mTextView.setTextColor(getResources().getColor(R.color.dayTextColor));
             qaContainer.setBackgroundResource(R.drawable.round_rect_day);
@@ -476,7 +476,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         return view;
     }
 
-
     private void answerCard(int ease) {
         JSONObject json = new JSONObject();
         try {
@@ -597,12 +596,12 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         }
 
         q = makeSoundIconsClickable(Html.fromHtml(qHtml.replaceAll
-                (SOUND_TAG_REPLACEMENT_REGEX,
-                        SOUND_TAG_REPLACEMENT_STRING).replaceAll("</?a.*?>", "")
+                        (SOUND_TAG_REPLACEMENT_REGEX,
+                                SOUND_TAG_REPLACEMENT_STRING).replaceAll("</?a.*?>", "")
                 , withImages ? imageGetter : null, null), false);
         a = makeSoundIconsClickable(Html.fromHtml(aHtml.replaceAll
-                (SOUND_TAG_REPLACEMENT_REGEX,
-                        SOUND_TAG_REPLACEMENT_STRING).replaceAll("</?a.*?>", "")
+                        (SOUND_TAG_REPLACEMENT_REGEX,
+                                SOUND_TAG_REPLACEMENT_STRING).replaceAll("</?a.*?>", "")
                 , withImages ? imageGetter : null, null), true);
 
     }
