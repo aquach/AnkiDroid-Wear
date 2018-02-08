@@ -9,7 +9,7 @@
 
     <ImageButton
         android:layout_width="90dp"
-        android:layout_height="40dp"
+        android:layout_height="60dp"
         android:id="@+id/icon"
         android:src="@drawable/pb_hard"
         android:background="@android:color/transparent"

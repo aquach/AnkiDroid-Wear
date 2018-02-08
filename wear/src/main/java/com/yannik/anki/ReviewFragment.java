@@ -240,7 +240,13 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                 }
             }
 
-            WearMainActivity.fireMessage(CommonIdentifiers.W2P_PLAY_SOUNDS, sounds.toString());
+            JSONArray firstSound = new JSONArray();
+            try {
+                firstSound.put(sounds.get(0));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            WearMainActivity.fireMessage(CommonIdentifiers.W2P_PLAY_SOUNDS, firstSound.toString());
         }
     }
 
