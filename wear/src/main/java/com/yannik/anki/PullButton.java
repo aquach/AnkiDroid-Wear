@@ -1,11 +1,8 @@
 package com.yannik.anki;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Point;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -19,9 +16,6 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-/**
- * Created by Yannik on 06.02.2015.
- */
 public class PullButton extends RelativeLayout {
 
     private final ImageButton icon;
@@ -78,7 +72,6 @@ public class PullButton extends RelativeLayout {
                     break;
                 case R.styleable.PullButton_upsideDown:
                     upsideDown = a.getBoolean(attr, false);
-
                     break;
                 case R.styleable.PullButton_ease_text:
                     easeTextView.setText(a.getString(attr));
@@ -113,11 +106,7 @@ public class PullButton extends RelativeLayout {
                 setY(homePosition);
 
                 ViewTreeObserver obs = getViewTreeObserver();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    obs.removeOnGlobalLayoutListener(this);
-                } else {
-                    obs.removeGlobalOnLayoutListener(this);
-                }
+                obs.removeOnGlobalLayoutListener(this);
             }
         });
 
@@ -126,13 +115,12 @@ public class PullButton extends RelativeLayout {
             icon.setImageResource(imageResId);
         }
 
-        minMovementDistance = displaySize.y * 4 / 5;
+        minMovementDistance = displaySize.y * 3 / 4;
 
         setAlpha(homeAlpha);
 
         this.animate().setInterpolator(new LinearInterpolator());
         this.setOnTouchListener(new SwipeTouchListener());
-
     }
 
     @Override
@@ -140,15 +128,15 @@ public class PullButton extends RelativeLayout {
         return true;
     }
 
-    public void right() {
-        setX(displaySize.x / 2);
+    public void moveToRight() {
+        setX(displaySize.x / 2 + getWidth() / 2);
     }
 
-    public void left() {
-        setX(displaySize.x / 2 - getWidth());
+    public void moveToLeft() {
+        setX(displaySize.x / 2 - getWidth() - getWidth() / 2);
     }
 
-    public void centerX() {
+    public void moveToCenter() {
         setX(displaySize.x / 2 - getWidth() / 2);
     }
 
@@ -160,26 +148,14 @@ public class PullButton extends RelativeLayout {
         textView.setText(text);
     }
 
-    public void slideIn(long delay) {
+    public void show() {
         setY(homePosition);
         setAlpha(homeAlpha);
         setVisibility(View.VISIBLE);
     }
 
-    public void animateOut(float velocity) {
+    public void onPull() {
         if (ocl != null) ocl.onClick(PullButton.this);
-//        animate()
-//                .setStartDelay(0)
-//                .y(exitY)
-//                .setDuration(Math.min((long) ((Math.abs(getY() - exitY)) / Math.abs(velocity)), 500))
-//                .setListener(new AnimatorListenerAdapter() {
-//                    @Override
-//                    public void onAnimationEnd(Animator animation) {
-//                        if (ocl != null) ocl.onClick(PullButton.this);
-//                        setY(displaySize.y + 10);
-//                        animate().setStartDelay(0).y(homePosition).setListener(null).setDuration(250);
-//                    }
-//                });
     }
 
     class SwipeTouchListener implements OnTouchListener {
@@ -189,16 +165,12 @@ public class PullButton extends RelativeLayout {
 
         @Override
         public boolean onTouch(final View v, MotionEvent event) {
-/*            if(exitY == Integer.MAX_VALUE){
-                exitY = -v.getHeight() - 10;
-            }*/
             float viewPositionY = v.getY();
             float eventPositionY = event.getRawY();
             if (upsideDown) {
                 viewPositionY = displaySize.y - viewPositionY - v.getHeight();
                 eventPositionY = displaySize.y - eventPositionY;
             }
-
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -224,7 +196,7 @@ public class PullButton extends RelativeLayout {
                     float yVelocity = mVelocityTracker.getYVelocity();
 
                     if (viewPositionY < minMovementDistance && yVelocity >= 0) {
-                        animateOut(mVelocityTracker.getYVelocity());
+                        onPull();
                     } else if (viewPositionY + v.getHeight() < displaySize.y) {
                         v.animate().setStartDelay(0).y(extendedPosition).alpha(extendedAlpha).setListener(null);
                     } else {
@@ -239,5 +211,4 @@ public class PullButton extends RelativeLayout {
             return true;
         }
     }
-
 }
