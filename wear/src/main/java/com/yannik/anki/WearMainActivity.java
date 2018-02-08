@@ -14,12 +14,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.FragmentGridPagerAdapter;
 import android.support.wearable.view.GridViewPager;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -40,7 +37,6 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -158,7 +154,7 @@ public class WearMainActivity extends WearableActivity {
         });
 
         reviewFragment = ReviewFragment.newInstance(preferences, viewPager);
-        decksFragment = CollectionFragment.newInstance();
+        decksFragment = new CollectionFragment();
 
         if (preferences.isAmbientMode()) {
             setAmbientEnabled();

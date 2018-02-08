@@ -45,35 +45,16 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
     private static final String TAG = "CollectionFragment";
 
-    /**
-     * The list of decks that will be displayed, will be provided by.
-     */
     ArrayList<Deck> mDecks = new ArrayList<>();
     View collectionListContainer;
     private OnFragmentInteractionListener mListener;
     private Preferences settings;
 
-    /**
-     * The fragment's ListView/GridView.
-     */
     private AbsListView mListView;
 
-    /**
-     * The Adapter which will be used to populate the ListView/GridView with
-     * Views.
-     */
     private BaseAdapter mAdapter;
 
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
     public CollectionFragment() {
-    }
-
-    public static CollectionFragment newInstance() {
-        return new CollectionFragment();
     }
 
     public void setSettings(Preferences settings) {
@@ -83,18 +64,8 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
     public void applySettings() {
         if (settings == null) return;
-
-        setDayMode(settings.isDayMode());
-
+        collectionListContainer.setBackgroundResource(R.drawable.round_rect_day);
         mAdapter.notifyDataSetChanged();
-    }
-
-    public void setDayMode(boolean dayMode) {
-        if (dayMode) {
-            collectionListContainer.setBackgroundResource(R.drawable.round_rect_day);
-        } else {
-            collectionListContainer.setBackgroundResource(R.drawable.round_rect_night);
-        }
     }
 
     @Override
