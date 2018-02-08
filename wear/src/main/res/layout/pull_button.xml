@@ -8,7 +8,7 @@
     >
 
     <ImageButton
-        android:layout_width="90dp"
+        android:layout_width="match_parent"
         android:layout_height="60dp"
         android:id="@+id/icon"
         android:src="@drawable/pb_hard"
@@ -19,7 +19,7 @@
         android:layout_centerHorizontal="true" />
 
     <TextView
-        android:layout_width="90dp"
+        android:layout_width="match_parent"
         android:layout_height="20dp"
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceSmall"

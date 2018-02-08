@@ -81,7 +81,7 @@
 
     <com.yannik.anki.PullButton
         android:id="@+id/midButton"
-        android:layout_width="80dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:visibility="invisible"
