@@ -223,7 +223,6 @@ public class PullButton extends RelativeLayout {
                     break;
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP:
-
                     mVelocityTracker.computeCurrentVelocity(1);
                     float yVelocity = mVelocityTracker.getYVelocity();
 

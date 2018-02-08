@@ -44,7 +44,7 @@ import static com.yannik.sharedvalues.CommonIdentifiers.P2W_COLLECTION_LIST_DECK
  * interface.
  */
 public class CollectionFragment extends Fragment implements AbsListView.OnItemClickListener,
-        WearMainActivity.JsonReceiver, WearMainActivity.AmbientStatusReceiver {
+        WearMainActivity.JsonReceiver {
 
     private static final String TAG = "CollectionFragment";
 
@@ -196,16 +196,13 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         }
     }
 
-    @Override
     public void onExitAmbient() {
         applySettings();
     }
 
-    @Override
     public void onEnterAmbient() {
         setDayMode(false);
     }
-
 
     /**
      * This interface must be implemented by activities that contain this

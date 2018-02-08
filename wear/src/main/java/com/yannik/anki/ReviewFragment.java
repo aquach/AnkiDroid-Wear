@@ -59,7 +59,7 @@ import static android.content.Context.VIBRATOR_SERVICE;
  * Use the {@link ReviewFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ReviewFragment extends Fragment implements WearMainActivity.JsonReceiver, WearMainActivity.AmbientStatusReceiver {
+public class ReviewFragment extends Fragment implements WearMainActivity.JsonReceiver {
     private static final String TAG = "ReviewFragment";
     public static final String W2W_RELOAD_HTML_FOR_MEDIA = "reload_text";
     private static final String W2W_REMOVE_SCREEN_LOCK = "remove_screen_lock";
@@ -724,7 +724,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         lastResetTimeMillis = System.currentTimeMillis();
     }
 
-    @Override
     public void onEnterAmbient() {
         if (showingEaseButtons){
             hideButtons();
@@ -735,7 +734,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         setDayMode(false);
     }
 
-    @Override
     public void onExitAmbient() {
         if(buttonsHiddenOnAmbient){
             showButtons();

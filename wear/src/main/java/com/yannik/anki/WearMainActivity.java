@@ -371,12 +371,6 @@ public class WearMainActivity extends WearableActivity {
         void onJsonReceive(String path, JSONObject json);
     }
 
-    interface AmbientStatusReceiver {
-        void onExitAmbient();
-
-        void onEnterAmbient();
-    }
-
     public class MessageReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
