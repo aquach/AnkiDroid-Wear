@@ -1,6 +1,5 @@
 package com.yannik.anki;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
@@ -28,8 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.yannik.sharedvalues.CommonIdentifiers.P2W_COLLECTION_LIST_DECK_COUNT;
 import static com.yannik.sharedvalues.CommonIdentifiers.P2W_COLLECTION_LIST_DECK_ID;
@@ -104,7 +101,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new DayNightArrayAdapter(getActivity(), mDecks);
+        mAdapter = new DayNightArrayAdapter(getActivity(), settings, mDecks);
     }
 
     @Override
@@ -130,11 +127,6 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
@@ -150,7 +142,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(mDecks.get(position).getID());
+            mListener.onFragmentInteraction(mDecks.get(position).deckID);
         }
     }
 
@@ -160,29 +152,34 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             JSONArray collectionNames = js.names();
             if (collectionNames == null) return;
 
-            mDecks.clear();
+            List<Deck> decks = new ArrayList<>();
 
             for (int i = 0; i < collectionNames.length(); i++) {
-                String colName;
-                long deckID;
-                String deckCounts;
                 try {
-                    colName = collectionNames.getString(i);
+                    String colName = collectionNames.getString(i);
                     JSONObject deckObject = js.getJSONObject(colName);
-                    deckID = deckObject.getLong(P2W_COLLECTION_LIST_DECK_ID);
-                    deckCounts = deckObject.getString(P2W_COLLECTION_LIST_DECK_COUNT);
-                    Deck newDeck = new Deck(colName, deckID, deckCounts);
-                    if (newDeck.getNewCount() > 0 || newDeck.getLearningCount() > 0 || newDeck.getReviewCount() > 0)
-                        mDecks.add(newDeck);
+                    long deckID = deckObject.getLong(P2W_COLLECTION_LIST_DECK_ID);
+                    final JSONArray deckCounts = new JSONArray(deckObject.getString(P2W_COLLECTION_LIST_DECK_COUNT));
+
+                    Deck newDeck = new Deck(colName, deckID, deckCounts.getInt(2), deckCounts.getInt(0), deckCounts.getInt(1));
+                    decks.add(newDeck);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
+            mDecks.clear();
+
+            for (Deck d : decks) {
+                final int[] studyCounts = d.getTotalCardsToStudy(decks);
+                if (studyCounts[0] + studyCounts[1] + studyCounts[2] > 0)
+                    mDecks.add(d);
+            }
+
             Collections.sort(mDecks, new Comparator<Deck>() {
                 @Override
                 public int compare(Deck d1, Deck d2) {
-                    return new ListComparator<String>().compare(Arrays.asList(d1.getNameTokens()), Arrays.asList(d2.getNameTokens()));
+                    return new ListComparator<String>().compare(Arrays.asList(d1.nameTokens), Arrays.asList(d2.nameTokens));
                 }
             });
 
@@ -195,14 +192,6 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         } else {
             Log.w(TAG, "Received message with un-managed path");
         }
-    }
-
-    public void onExitAmbient() {
-        applySettings();
-    }
-
-    public void onEnterAmbient() {
-        setDayMode(false);
     }
 
     /**
@@ -223,26 +212,27 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
      * Customised adapter for displaying list of deck names.
      * Supports day and night mode.
      */
-    private class DayNightArrayAdapter extends BaseAdapter {
-
+    private static class DayNightArrayAdapter extends BaseAdapter {
         private final Context mContext;
-        private final List<Deck> mDNAADecks;
+        private final List<Deck> mDecks;
+        private final Preferences mSettings;
 
-        private class DeckViewHolder {
+        private static class DeckViewHolder {
             RelativeLayout catLayout;
             TextView catName;
             TextView catNumber;
         }
 
-        DayNightArrayAdapter(Context parContext, List<Deck> parDecks) {
+        DayNightArrayAdapter(Context parContext, Preferences settings, List<Deck> parDecks) {
             mContext = parContext;
-            mDNAADecks = parDecks;
+            mDecks = parDecks;
+            mSettings = settings;
         }
 
         @Override
         public int getCount() {
-            if (mDNAADecks != null) {
-                return mDNAADecks.size();
+            if (mDecks != null) {
+                return mDecks.size();
             } else {
                 return 0;
             }
@@ -250,7 +240,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
         @Override
         public Object getItem(int position) {
-            return mDNAADecks.get(position);
+            return mDecks.get(position);
         }
 
         @Override
@@ -275,10 +265,10 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             }
 
             // setting here values to the fields of my items from my fan object
-            Deck oneDeck = mDNAADecks.get(position);
+            Deck oneDeck = mDecks.get(position);
 
             StringBuilder deckName = new StringBuilder();
-            for (int i = 0; i < oneDeck.getNameTokens().length - 1; i++) {
+            for (int i = 0; i < oneDeck.nameTokens.length - 1; i++) {
                 deckName.append("  ↳ ");
             }
             deckName.append(oneDeck.getSubdeckName());
@@ -287,12 +277,12 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             viewHolder.catNumber.setText(Html.fromHtml(sumCountsForDeck(oneDeck)));
 
             // coloring background
-            if (settings == null || settings.isDayMode()) {
-                viewHolder.catName.setTextColor(getResources().getColor(R.color.dayTextColor));
-                viewHolder.catNumber.setTextColor(getResources().getColor(R.color.dayTextColor));
+            if (mSettings == null || mSettings.isDayMode()) {
+                viewHolder.catName.setTextColor(mContext.getResources().getColor(R.color.dayTextColor));
+                viewHolder.catNumber.setTextColor(mContext.getResources().getColor(R.color.dayTextColor));
             } else {
-                viewHolder.catName.setTextColor(getResources().getColor(R.color.nightTextColor));
-                viewHolder.catNumber.setTextColor(getResources().getColor(R.color.nightTextColor));
+                viewHolder.catName.setTextColor(mContext.getResources().getColor(R.color.nightTextColor));
+                viewHolder.catNumber.setTextColor(mContext.getResources().getColor(R.color.nightTextColor));
             }
 
             return view;
@@ -302,11 +292,11 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             int numNewCards = 0;
             int numLearningCards = 0;
             int numReviewingCards = 0;
-            for (Deck deck : mDNAADecks) {
+            for (Deck deck : mDecks) {
                 if (deck.getName().equals(targetDeck.getName()) || deck.isSubdeckOf(targetDeck)) {
-                    numNewCards += deck.getNewCount();
-                    numLearningCards += deck.getLearningCount();
-                    numReviewingCards += deck.getReviewCount();
+                    numNewCards += deck.newCount;
+                    numLearningCards += deck.learningCount;
+                    numReviewingCards += deck.reviewCount;
                 }
             }
 
@@ -341,126 +331,57 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
         }
     }
 
-    /**
-     * Deck is an immutable object.
-     * Built using provided JSON.
-     */
-    private class Deck {
-        /**
-         * The deck name. e.g. : "computing::java".
-         */
-        private String[] mName;
-        /**
-         * The unique identifier of this deck. e.g. : "1472977314172".
-         */
-        private long mID;
-        /**
-         * The number of cards in this deck with status "new".
-         */
-        private int mNewCount;
-        /**
-         * The number of cards in this deck with status "learning".
-         */
-        private int mLearningCount;
-        /**
-         * The number of cards in this deck with status "to review".
-         */
-        private int mReviewCount;
+    private static class Deck {
+        public final String[] nameTokens;
+        public final long deckID;
+        public final int newCount;
+        public final int learningCount;
+        public final int reviewCount;
 
-        /**
-         * Full params constructor.
-         *
-         * @param parName       The deck name. e.g. : "computing::java".
-         * @param parDeckID     The unique identifier of this deck. e.g. : "1472977314172".
-         * @param parDeckCounts The number of cards of each type. e.g. : "[4,3,5]"
-         */
-        Deck(String parName, long parDeckID, String parDeckCounts) {
-            setName(parName);
-            setID(parDeckID);
-            setDeckCounts(parDeckCounts);
+        public Deck(String deckName, long deckID, int newCount, int learningCount, int reviewCount) {
+            nameTokens = deckName.split("::");
+            this.deckID = deckID;
+            this.newCount = newCount;
+            this.learningCount = learningCount;
+            this.reviewCount = reviewCount;
         }
 
-        /**
-         * @return The deck name. e.g. : "computing::java".
-         */
         String getName() {
-            return TextUtils.join("::", mName);
-        }
-
-        String[] getNameTokens() {
-            return mName;
+            return TextUtils.join("::", nameTokens);
         }
 
         String getSubdeckName() {
-            return mName[mName.length - 1];
-        }
-
-        /**
-         * @return The number of cards in this deck with status "new".
-         */
-        int getNewCount() {
-            return mNewCount;
-        }
-
-        /**
-         * @return The number of cards in this deck with status "learning".
-         */
-        int getLearningCount() {
-            return mLearningCount;
-        }
-
-        /**
-         * @return The number of cards in this deck with status "to review".
-         */
-        int getReviewCount() {
-            return mReviewCount;
+            return nameTokens[nameTokens.length - 1];
         }
 
         boolean isSubdeckOf(Deck d) {
             return getName().contains(d.getName() + "::");
         }
 
-        /**
-         * Parse deck counts string.
-         *
-         * @param parDeckCounts The number of cards of each type [learn, review, new]. e.g. : "[4,3,5]"
-         */
-        private void setDeckCounts(String parDeckCounts) {
-            // These are the deck counts of the Deck. [learn, review, new]
-            Pattern pattern = Pattern.compile("\\[([0-9]+),([0-9]+),([0-9]+)\\]");
-            Matcher matcher = pattern.matcher(parDeckCounts);
-            if (matcher.matches()) {
-                mLearningCount = Integer.valueOf(matcher.group(1));
-                mReviewCount = Integer.valueOf(matcher.group(2));
-                mNewCount = Integer.valueOf(matcher.group(3));
-            }
-        }
-
-        private void setID(long parID) {
-            mID = parID;
-        }
-
-        private void setName(String parName) {
-            mName = parName.split("::");
-        }
-
-        /**
-         * @return The unique identifier of this deck. e.g. : "1472977314172".
-         */
-        long getID() {
-            return mID;
-        }
-
         @Override
         public String toString() {
-            final StringBuffer sb = new StringBuffer("Deck{");
-            sb.append("mName='").append(getName()).append('\'');
-            sb.append(", mID=").append(mID);
-            sb.append(", mNewCount=").append(mNewCount);
-            sb.append(", mLearningCount=").append(mLearningCount);
-            sb.append(", mReviewCount=").append(mReviewCount);
-            sb.append('}');
-            return sb.toString();
+            return "Deck{" +
+                    "nameTokens=" + Arrays.toString(nameTokens) +
+                    ", deckID=" + deckID +
+                    ", newCount=" + newCount +
+                    ", learningCount=" + learningCount +
+                    ", reviewCount=" + reviewCount +
+                    '}';
+        }
+
+        public int[] getTotalCardsToStudy(List<Deck> allDecks) {
+            int numNewCards = 0;
+            int numLearningCards = 0;
+            int numReviewingCards = 0;
+            for (Deck deck : allDecks) {
+                if (deck.getName().equals(getName()) || deck.isSubdeckOf(this)) {
+                    numNewCards += deck.newCount;
+                    numLearningCards += deck.learningCount;
+                    numReviewingCards += deck.reviewCount;
+                }
+            }
+
+            return new int[]{numNewCards, numLearningCards, numReviewingCards};
         }
     }
 }
