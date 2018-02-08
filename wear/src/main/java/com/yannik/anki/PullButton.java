@@ -126,12 +126,9 @@ public class PullButton extends RelativeLayout {
             icon.setImageResource(imageResId);
         }
 
-
-        minMovementDistance = displaySize.y * 3 / 4;
-
+        minMovementDistance = displaySize.y * 4 / 5;
 
         setAlpha(homeAlpha);
-
 
         this.animate().setInterpolator(new LinearInterpolator());
         this.setOnTouchListener(new SwipeTouchListener());

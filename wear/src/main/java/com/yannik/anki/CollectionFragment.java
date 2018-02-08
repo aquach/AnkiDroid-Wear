@@ -172,7 +172,8 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
                     deckID = deckObject.getLong(P2W_COLLECTION_LIST_DECK_ID);
                     deckCounts = deckObject.getString(P2W_COLLECTION_LIST_DECK_COUNT);
                     Deck newDeck = new Deck(colName, deckID, deckCounts);
-                    mDecks.add(newDeck);
+                    if (newDeck.getNewCount() > 0 || newDeck.getLearningCount() > 0 || newDeck.getReviewCount() > 0)
+                        mDecks.add(newDeck);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
