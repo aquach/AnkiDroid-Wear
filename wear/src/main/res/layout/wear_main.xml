@@ -8,15 +8,4 @@
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
-    <TextView
-        android:id="@+id/time_overlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|top"
-        android:background="@color/black"
-        tools:text="10:24"
-        android:textColor="@color/white"
-        android:visibility="gone"/>
-
 </FrameLayout>

@@ -58,25 +58,6 @@ public class WearMainActivity extends WearableActivity {
     private IntentFilter messageFilter;
     private ReviewFragment reviewFragment;
     private CollectionFragment decksFragment;
-    private TextView timeOverlay;
-    private Handler timeHandler = new Handler();
-    private Runnable timeRunnable = new Runnable() {
-        @Override
-        public void run() {
-            Calendar c = Calendar.getInstance();
-            //            int hours = c.get(Calendar.HOUR);
-            //            int minutes = c.get(Calendar.MINUTE);
-            int seconds = c.get(Calendar.SECOND);
-            CharSequence timeText;
-            if (!DateFormat.is24HourFormat(WearMainActivity.this)) {
-                timeText = android.text.format.DateFormat.format("hh:mm", new java.util.Date());
-            } else {
-                timeText = android.text.format.DateFormat.format("kk:mm", new java.util.Date());
-            }
-            timeOverlay.setText(timeText);
-            timeHandler.postDelayed(this, 1000 * (60 - seconds));
-        }
-    };
     private MyGridViewPager viewPager;
 
     public static void fireMessage(final String path, final String data) {
@@ -145,34 +126,6 @@ public class WearMainActivity extends WearableActivity {
     }
 
     @Override
-    public void onEnterAmbient(Bundle ambientDetails) {
-        super.onEnterAmbient(ambientDetails);
-        if (preferences.isAmbientMode()) {
-            reviewFragment.onEnterAmbient();
-            decksFragment.onEnterAmbient();
-            timeOverlay.setVisibility(View.VISIBLE);
-
-            timeHandler = new Handler();
-            timeHandler.post(timeRunnable);
-
-            Log.d(TAG, "Entered ambient mode");
-        } else {
-            finish();
-        }
-    }
-
-    @Override
-    public void onExitAmbient() {
-        super.onExitAmbient();
-        reviewFragment.onExitAmbient();
-        decksFragment.onExitAmbient();
-        timeOverlay.setVisibility(View.GONE);
-        timeHandler.removeCallbacks(timeRunnable);
-        Log.d(TAG, "Exited ambient mode");
-
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wear_main);
@@ -221,8 +174,6 @@ public class WearMainActivity extends WearableActivity {
                 preferences.setSelectedDeck(id);
             }
         });
-
-        timeOverlay = (TextView) findViewById(R.id.time_overlay);
 
         jsonReceivers.add(new JsonReceiver() {
             @Override
