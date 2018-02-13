@@ -53,6 +53,7 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
     private AbsListView mListView;
 
     private BaseAdapter mAdapter;
+    private TextView mNoDecksMessageTextView;
 
     public CollectionFragment() {
     }
@@ -86,6 +87,8 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
+
+        mNoDecksMessageTextView = (TextView) view.findViewById(android.R.id.empty);
 
         applySettings();
         return view;
@@ -158,6 +161,13 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
                 return;
             }
 
+            if (mDecks.isEmpty()) {
+                mNoDecksMessageTextView.setVisibility(View.VISIBLE);
+                mListView.setVisibility(View.GONE);
+            } else {
+                mNoDecksMessageTextView.setVisibility(View.GONE);
+                mListView.setVisibility(View.VISIBLE);
+            }
             mAdapter.notifyDataSetChanged();
 
         } else {
