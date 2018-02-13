@@ -65,7 +65,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
     private static final String W2W_REMOVE_SCREEN_LOCK = "remove_screen_lock";
     private static final String SOUND_PLACEHOLDER_STRING = "awlieurablsdkvbwlaiueaghlsdkvblqi2345235.jpg";
     private static final String SOUND_TAG_REPLACEMENT_REGEX = "\\[(sound:[^\\]]+)\\]";
-    //    private static final String SOUND_TAG_REPLACEMENT_STRING = "&#128266;";
     private static final String SOUND_TAG_REPLACEMENT_STRING = "<img src='" + SOUND_PLACEHOLDER_STRING +
             "'/>";
     /**
@@ -74,7 +73,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
      */
     private static final Pattern fSoundRegexps = Pattern.compile("(?i)(\\[sound:([^]]+)\\])");
     private static final int EASY = 0, MID = 1, HARD = 2, FAILED = 3;
-    private static final int GESTURE_BUTTON_ANIMATION_TIME_MS = 1000;
     private static Preferences settings;
     private static GridViewPager gridViewPager;
     byte playSounds = -1;
@@ -86,7 +84,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
     //    private PullButton easeButtons[FAILED], easeButtons[HARD], easeButtons[MID], easeButtons[EASY];
     private PullButton[] easeButtons;
     private boolean showingEaseButtons = false, showingAnswer = false;
-    private Timer easeButtonShowTimer = new Timer();
     private ScrollView qaScrollView;
     private ProgressBar spinner;
     private boolean scrollViewMoved;
@@ -120,13 +117,9 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
             }
         }
     };
-    private Timer screenTimeoutTimer;
-    private long lastResetTimeMillis = 0;
     private int numButtons = 4;
     private JSONArray nextReviewTimes;
     private Spanned q, a;
-    private boolean buttonsHiddenOnAmbient = false;
-    private float gestureButtonVelocity = 1;
 
     public ReviewFragment() {
         // Required empty public constructor
@@ -146,13 +139,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
         ReviewFragment.gridViewPager = gridViewPager;
         fragment.setArguments(args);
         return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Resources r = getResources();
-        gestureButtonVelocity = r.getDisplayMetrics().heightPixels / GESTURE_BUTTON_ANIMATION_TIME_MS;
     }
 
     private void hideButtons() {
@@ -345,7 +331,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
 
     public void applySettings() {
         if (settings == null || mTextView == null || !isAdded()) return;
-        resetScreenTimeout(true);
         mTextView.setTextSize(settings.getCardFontSize());
         setDayMode(settings.isDayMode());
     }
@@ -393,7 +378,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                         });
 
                 qaOverlay.setOnTouchListener(new View.OnTouchListener() {
-
                     private final float SCROLL_THRESHOLD = ViewConfiguration.get(getActivity()
                             .getBaseContext())
                             .getScaledTouchSlop();
@@ -402,18 +386,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
 
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
-//                        Log.v("test", "ontouchevent " + event.getAction());
-
-
-                        resetScreenTimeout(false);
-
-//                        soundIconClicked = false;
-//                        if (mTextView.onTouchEvent(event)) {
-//                            Log.d(getClass().getName(), "textview was touched, soundIconClicked is: " + soundIconClicked);
-//                            if (soundIconClicked) return false;
-//                        }
-
-
                         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
                             mDownX = event.getX();
                             mDownY = event.getY();
@@ -424,15 +396,7 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                                     mDownY - event.getY()) > SCROLL_THRESHOLD)) {
                                 scrollViewMoved = true;
                             }
-//                            if(Math.abs(mDownY - event.getY()) > SCROLL_THRESHOLD){
-//                                gridViewPager.requestDisallowInterceptTouchEvent(true);
-//                            }else if(Math.abs(mDownX - event.getX()) > SCROLL_THRESHOLD){
-//                                gridViewPager.requestDisallowInterceptTouchEvent(false);
-//                            }
                         }
-//                        else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
-//                            gridViewPager.requestDisallowInterceptTouchEvent(false);
-//                        }
                         gestureDetector.onTouchEvent(event);
 
                         soundIconClicked = false;
@@ -442,10 +406,8 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                         if (soundIconClicked) return false;
 
                         return false;
-
                     }
                 });
-
 
                 easeButtons = new PullButton[4];
                 easeButtons[EASY] = (PullButton) stub.findViewById(R.id.easyButton);
@@ -456,7 +418,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                 View.OnClickListener easeButtonListener = new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        resetScreenTimeout(false);
                         int ease = 0;
                         switch (v.getId()) {
                             case R.id.failedButton:
@@ -540,7 +501,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
     public void onStart() {
         super.onStart();
         Log.d(getClass().getName(), "ReviewFragment.onStart");
-        resetScreenTimeout(true);
         for (int i = 0; i < jsonQueueNames.size(); i++) {
             onJsonReceive(jsonQueueNames.get(i), jsonQueueObjects.get(i));
         }
@@ -588,9 +548,6 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
             blockControls();
             hideLoadingSpinner();
             mTextView.setText(R.string.review_frag__no_more_cards);
-        } else if (path.equals(W2W_REMOVE_SCREEN_LOCK)) {
-            getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            Log.d("ReviewFragment", "removing screen lock");
         } else if (path.equals(W2W_RELOAD_HTML_FOR_MEDIA)) {
             setQA(true);
             Log.d("ReviewFragment", "reloading Html for media");
@@ -656,95 +613,15 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
 
                 ClickableString click_span = new ClickableString(onSoundIconClickListener, soundName);
 
-                //                ClickableSpan[] click_spans = qss.getSpans(start, end,
-                // ClickableSpan.class);
-                //
-                //                if (click_spans.length != 0) {
-                //                    // remove all click spans
-                //                    for (ClickableSpan c_span : click_spans) {
-                //                        qss.removeSpan(c_span);
-                //                    }
-                //                }
-
-
                 qss.setSpan(click_span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             }
-
-
-//        int soundIndex = 0;
-//        for (int i = 0; i < qss.length()-1; i++){
-//            if(((int)qss.charAt(i)) == 55357 && ((int)qss.charAt(i+1)) == 56586){
-//                String soundName = null;
-//                if(soundIndex < sounds.length()){
-//                    try {
-//                        soundName = sounds.getString(soundIndex);
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                qss.setSpan(new ClickableString(onSoundIconClickListener, soundName), i, i+2, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-//                soundIndex++;
-//            }
-//        }
         }
         return qss;
     }
 
     private void makeLinksFocusable(TextView tv) {
-//        MovementMethod m = tv.getMovementMethod();
-//        if ((m == null) || !(m instanceof LinkMovementMethod)) {
-//            if (tv.getLinksClickable()) {
         tv.setMovementMethod(LinkMovementMethod.getInstance());
-//            }
-//        }
-    }
-
-    synchronized void resetScreenTimeout(boolean forceReset) {
-
-        if (System.currentTimeMillis() - lastResetTimeMillis > 2000 || forceReset) {
-
-            long timeout = settings.getScreenTimeout() * 1000;
-
-            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            Log.d("ReviewFragment", "setting screen lock " + timeout);
-            if (screenTimeoutTimer != null) {
-                screenTimeoutTimer.cancel();
-                screenTimeoutTimer = null;
-            }
-            if (screenTimeoutTimer == null) {
-                screenTimeoutTimer = new Timer();
-                screenTimeoutTimer.schedule(new TimerTask() {
-                    public void run() {
-                        screenTimeoutTimer.cancel();
-                        screenTimeoutTimer = null;
-                        Intent messageIntent = new Intent();
-                        messageIntent.setAction(Intent.ACTION_SEND);
-                        messageIntent.putExtra("path", W2W_REMOVE_SCREEN_LOCK);
-                        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(messageIntent);
-                    }
-                }, timeout);
-            }
-        }
-        lastResetTimeMillis = System.currentTimeMillis();
-    }
-
-    public void onEnterAmbient() {
-        if (showingEaseButtons){
-            hideButtons();
-            buttonsHiddenOnAmbient = true;
-        } else {
-            buttonsHiddenOnAmbient = false;
-        }
-        setDayMode(false);
-    }
-
-    public void onExitAmbient() {
-        if(buttonsHiddenOnAmbient){
-            showButtons();
-        }
-        applySettings();
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {

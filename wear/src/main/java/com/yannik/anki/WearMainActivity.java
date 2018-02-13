@@ -266,6 +266,7 @@ public class WearMainActivity extends WearableActivity {
                 Log.d(TAG, "Wear connection to Google Api suspended");
             }
         });
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
