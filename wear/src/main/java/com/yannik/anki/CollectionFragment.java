@@ -2,6 +2,7 @@ package com.yannik.anki;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.Html;
@@ -144,9 +145,13 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
             mDecks.clear();
 
+            int numCardsToStudy = 0;
+
             for (Deck d : decks) {
                 final int[] studyCounts = d.getTotalCardsToStudy(decks);
-                if (studyCounts[0] + studyCounts[1] + studyCounts[2] > 0)
+                final int sum = studyCounts[0] + studyCounts[1] + studyCounts[2];
+                numCardsToStudy += sum;
+                if (sum > 0)
                     mDecks.add(d);
             }
 
@@ -168,6 +173,12 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
                 mNoDecksMessageTextView.setVisibility(View.GONE);
                 mListView.setVisibility(View.VISIBLE);
             }
+
+            SharedPreferences settings = getActivity().getSharedPreferences("DECK_TOTALS", 0);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putInt("numCards", numCardsToStudy);
+            editor.commit();
+
             mAdapter.notifyDataSetChanged();
 
         } else {

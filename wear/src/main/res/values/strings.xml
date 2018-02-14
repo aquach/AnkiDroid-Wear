@@ -16,4 +16,6 @@
     <string name="common_again">Again</string>
     <string name="common_easy">Easy</string>
 
+    <string name="complications_provider_service_label">Card Count</string>
+
 </resources>

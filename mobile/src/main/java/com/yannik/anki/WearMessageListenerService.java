@@ -528,7 +528,6 @@ public class WearMessageListenerService extends WearableListenerService {
                 sendDecksToWear(decksJSONObj);
             }
         }
-        ;
     }
 
     private void sendDecksToWear(JSONObject decks) {
