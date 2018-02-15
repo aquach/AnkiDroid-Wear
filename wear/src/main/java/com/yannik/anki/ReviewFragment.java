@@ -6,8 +6,6 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,7 +15,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.view.GridViewPager;
 import android.support.wearable.view.WatchViewStub;
 import android.text.Html;
@@ -34,7 +31,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -47,8 +43,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -226,19 +220,7 @@ public class ReviewFragment extends Fragment implements WearMainActivity.JsonRec
                 }
             }
 
-            JSONArray soundsToPlay;
-            if (showingAnswer) {
-                JSONArray firstSound = new JSONArray();
-                try {
-                    firstSound.put(sounds.get(0));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                soundsToPlay = firstSound;
-            } else {
-                soundsToPlay = sounds;
-            }
-            WearMainActivity.fireMessage(CommonIdentifiers.W2P_PLAY_SOUNDS, soundsToPlay.toString());
+            WearMainActivity.fireMessage(CommonIdentifiers.W2P_PLAY_SOUNDS, sounds.toString());
         }
     }
 
