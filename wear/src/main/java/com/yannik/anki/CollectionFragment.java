@@ -149,9 +149,8 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
 
             for (Deck d : decks) {
                 final int[] studyCounts = d.getTotalCardsToStudy(decks);
-                final int sum = studyCounts[0] + studyCounts[1] + studyCounts[2];
-                numCardsToStudy += sum;
-                if (sum > 0)
+                numCardsToStudy += d.learningCount + d.newCount + d.reviewCount;
+                if (studyCounts[0] + studyCounts[1] + studyCounts[2] > 0)
                     mDecks.add(d);
             }
 
