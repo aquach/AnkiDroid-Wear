@@ -1,10 +1,12 @@
 package com.yannik.anki;
 
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
@@ -177,6 +179,10 @@ public class CollectionFragment extends Fragment implements AbsListView.OnItemCl
             SharedPreferences.Editor editor = settings.edit();
             editor.putInt("numCards", numCardsToStudy);
             editor.commit();
+
+            ComponentName componentName = new ComponentName(getActivity(), AnkiWearComplicationProviderService.class);
+            ProviderUpdateRequester providerUpdateRequester = new ProviderUpdateRequester(getActivity(), componentName);
+            providerUpdateRequester.requestUpdateAll();
 
             mAdapter.notifyDataSetChanged();
 

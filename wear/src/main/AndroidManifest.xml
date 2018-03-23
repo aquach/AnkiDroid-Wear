@@ -48,6 +48,7 @@
         </service>
 
         <receiver android:name=".ComplicationTapBroadcastReceiver"/>
+        <receiver android:name=".DeckRequesterReceiver"></receiver>
     </application>
 
 </manifest>

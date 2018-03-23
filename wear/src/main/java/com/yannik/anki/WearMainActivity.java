@@ -218,7 +218,6 @@ public class WearMainActivity extends WearableActivity {
         messageFilter = new IntentFilter(Intent.ACTION_SEND);
         messageReceiver = new MessageReceiver();
 
-
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .build();
@@ -325,6 +324,7 @@ public class WearMainActivity extends WearableActivity {
             JSONObject js = null;
             String message = intent.getStringExtra("message");
             String path = intent.getStringExtra("path");
+            Log.d(TAG, message + " " + path);
             if (message != null) {
                 try {
                     js = new JSONObject(message);

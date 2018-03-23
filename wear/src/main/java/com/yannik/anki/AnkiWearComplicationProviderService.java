@@ -1,10 +1,15 @@
 package com.yannik.anki;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Icon;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.complications.ComplicationManager;
 import android.support.wearable.complications.ComplicationProviderService;
@@ -12,48 +17,28 @@ import android.support.wearable.complications.ComplicationText;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.util.Log;
 
-/**
- * Example watch face complication data provider provides a number that can be incremented on tap.
- */
+import com.yannik.sharedvalues.CommonIdentifiers;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import static com.yannik.sharedvalues.CommonIdentifiers.P2W_COLLECTION_LIST_DECK_COUNT;
+import static com.yannik.sharedvalues.CommonIdentifiers.P2W_COLLECTION_LIST_DECK_ID;
+
 public class AnkiWearComplicationProviderService extends ComplicationProviderService {
     private static final String TAG = "AnkiWearCPS";
 
-    private static SharedPreferences.OnSharedPreferenceChangeListener globalListener = null;
-    private static int numComplications = 0;
-
     @Override
     public void onComplicationActivated(int complicationId, int type, ComplicationManager manager) {
-        SharedPreferences settings = getApplicationContext().getSharedPreferences("DECK_TOTALS", 0);
+        IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
+        LocalBroadcastManager.getInstance(this).registerReceiver(new MessageReceiver(), messageFilter);
 
-        final SharedPreferences.OnSharedPreferenceChangeListener listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-                ComponentName componentName =
-                        new ComponentName(getApplicationContext(), AnkiWearComplicationProviderService.class);
+        PendingIntent broadcastToNumCardsUpdater = PendingIntent.getBroadcast(this, 0, new Intent(this, DeckRequesterReceiver.class), 0);
+        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
 
-                ProviderUpdateRequester providerUpdateRequester =
-                        new ProviderUpdateRequester(getApplicationContext(), componentName);
-                providerUpdateRequester.requestUpdateAll();
-            }
-        };
-
-        if (globalListener == null) {
-            globalListener = listener;
-            settings.registerOnSharedPreferenceChangeListener(listener);
-        }
-
-        numComplications++;
-    }
-
-    @Override
-    public void onComplicationDeactivated(int complicationId) {
-        numComplications--;
-
-        if (numComplications == 0) {
-            SharedPreferences settings = getApplicationContext().getSharedPreferences("DECK_TOTALS", 0);
-            settings.unregisterOnSharedPreferenceChangeListener(globalListener);
-            globalListener = null;
-        }
+        final int intervalSeconds = 600;
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), intervalSeconds * 1000, broadcastToNumCardsUpdater);
     }
 
     @Override
@@ -83,6 +68,47 @@ public class AnkiWearComplicationProviderService extends ComplicationProviderSer
             complicationManager.updateComplicationData(complicationId, complicationData);
         } else {
             complicationManager.noUpdateRequired(complicationId);
+        }
+    }
+
+    private static class MessageReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            JSONObject js = null;
+            String message = intent.getStringExtra("message");
+            String path = intent.getStringExtra("path");
+            if (message != null && path.equals(CommonIdentifiers.P2W_COLLECTION_LIST)) {
+                int numCardsToStudy = 0;
+
+                try {
+                    js = new JSONObject(message);
+                    JSONArray collectionNames = js.names();
+
+                    for (int i = 0; i < collectionNames.length(); i++) {
+                        try {
+                            String colName = collectionNames.getString(i);
+                            JSONObject deckObject = js.getJSONObject(colName);
+                            long deckID = deckObject.getLong(P2W_COLLECTION_LIST_DECK_ID);
+                            final JSONArray deckCounts = new JSONArray(deckObject.getString(P2W_COLLECTION_LIST_DECK_COUNT));
+
+                            numCardsToStudy += deckCounts.getInt(0) + deckCounts.getInt(1) + deckCounts.getInt(2);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "JSONException " + e);
+                }
+
+                SharedPreferences settings = context.getSharedPreferences("DECK_TOTALS", 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putInt("numCards", numCardsToStudy);
+                editor.commit();
+
+                ComponentName componentName = new ComponentName(context, AnkiWearComplicationProviderService.class);
+                ProviderUpdateRequester providerUpdateRequester = new ProviderUpdateRequester(context, componentName);
+                providerUpdateRequester.requestUpdateAll();
+            }
         }
     }
 }
